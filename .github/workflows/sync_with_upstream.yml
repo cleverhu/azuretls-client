@@ -1,0 +1,36 @@
+name: Sync Fork
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天 UTC 时间 00:00 运行
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Configure Git
+      run: |
+        git config user.name 'cleverhu'
+        git config user.email 'hu928973510@gmail.com'
+
+    - name: Add Upstream Remote
+      run: git remote add upstream https://github.com/Noooste/azuretls-client.git
+
+    - name: Sync Fork
+      run: |
+        git fetch upstream
+        git checkout main
+        git merge upstream/main --no-commit --no-ff
+        if [ -n "$(git diff --cached)" ]; then
+          git commit -m 'Merge upstream changes'
+          git push origin main
+        else
+          echo "No changes to merge"
+        fi
